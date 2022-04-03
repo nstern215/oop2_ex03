@@ -11,6 +11,7 @@
 #include <ostream>
 #include <sstream>
 #include <algorithm>
+#include <stdexcept>
 
 namespace rng = std::ranges;
 
@@ -21,18 +22,28 @@ SetCalculator::SetCalculator(std::istream& istr, std::ostream& ostr)
 
 void SetCalculator::run()
 {
-    do
-    {
-        m_ostr << '\n';
-        printOperations();
-        m_ostr << "Enter command ('help' for the list of available commands): ";
-        const auto action = readAction();
-        runAction(action);
-    } while (m_running);
+        do
+        {
+            m_ostr << '\n';
+            printOperations();
+            m_ostr << "Enter command ('help' for the list of available commands): ";
+
+            SetCalculator::Action action;
+
+            try {
+                action = readAction();
+                runAction(action);
+            }
+            catch(std::exception& e){
+                m_ostr << e.what() << std::endl;
+            }
+        } while (m_running);
+   
 }
 
 void SetCalculator::eval()
 {
+
     if (auto index = readOperationIndex(); index)
     {
         const auto& operation = m_operations[*index];
@@ -99,6 +110,7 @@ std::optional<int> SetCalculator::readOperationIndex() const
 SetCalculator::Action SetCalculator::readAction() const
 {
     auto action = std::string();
+
     m_istr >> action;
 
     const auto i = std::ranges::find(m_actions, action, &ActionDetails::command);
@@ -107,7 +119,9 @@ SetCalculator::Action SetCalculator::readAction() const
         return i->action;
     }
 
-    return Action::Invalid;
+    throw std::exception();
+
+  //  return Action::Invalid;
 }
 
 void SetCalculator::runAction(Action action)
@@ -116,10 +130,6 @@ void SetCalculator::runAction(Action action)
     {
         default:
             m_ostr << "Unknown enum entry used!\n";
-            break;
-
-        case Action::Invalid:
-            m_ostr << "Command not found\n";
             break;
 
         case Action::Eval:         eval();                     break;
