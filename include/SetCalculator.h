@@ -16,6 +16,7 @@ public:
 
 private:
     void eval();
+    void read();
     void del();
     void help();
     void exit();
@@ -41,6 +42,7 @@ private:
         Product,
         Comp,
         Del,
+    	Read,
         Help,
         Exit,
     };
@@ -64,7 +66,8 @@ private:
     std::optional<int> readOperationIndex() const;
     Action readAction() const;
     void runAction(Action action);
-
+    void runCalc();
+	
     static ActionMap createActions();
     static OperationList createOperations();
 };
