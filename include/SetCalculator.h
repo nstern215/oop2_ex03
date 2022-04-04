@@ -6,6 +6,8 @@
 #include <iosfwd>
 #include <optional>
 
+#include "CalculatorInput.h"
+
 class Operation;
 
 class SetCalculator
@@ -67,6 +69,8 @@ private:
     Action readAction() const;
     void runAction(Action action);
     void runCalc();
+
+    CalculatorInput m_input;
 	
     static ActionMap createActions();
     static OperationList createOperations();

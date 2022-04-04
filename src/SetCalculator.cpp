@@ -16,7 +16,7 @@
 namespace rng = std::ranges;
 
 SetCalculator::SetCalculator(std::istream& istr, std::ostream& ostr)
-	: m_actions(createActions()), m_operations(createOperations()), m_istr(istr), m_ostr(ostr)
+	: m_actions(createActions()), m_operations(createOperations()), m_istr(istr), m_ostr(ostr), m_input(m_istr)
 {
 }
 
@@ -24,17 +24,23 @@ void SetCalculator::run()
 {
 	do
 	{
-		m_ostr << '\n';
-		printOperations();
-		m_ostr << "Enter command ('help' for the list of available commands): ";
+		if (m_input.isUserMode())
+		{
+			m_ostr << '\n';
+			printOperations();
+			m_ostr << "Enter command ('help' for the list of available commands): ";
+		}
 		runCalc();
 	} while (m_running);
 }
 
 void SetCalculator::runCalc()
 {
+	m_input.loadInput();
+	
 	const auto action = readAction();
 	runAction(action);
+
 }
 
 void SetCalculator::eval()
@@ -45,6 +51,7 @@ void SetCalculator::eval()
 		auto inputs = std::vector<Set>();
 		for (auto i = 0; i < operation->inputCount(); ++i)
 		{
+			m_input.loadInput();
 			inputs.push_back(Set(m_istr));
 		}
 
@@ -59,22 +66,25 @@ void SetCalculator::read()
 	m_istr >> path;
 
 	std::ifstream inputFile;
+	
 	inputFile.open(path);
 
 	if (!inputFile.is_open())
+		throw std::ios_base::failure("Cannot open and read file at: " + path);
+
+	const auto fileStream = new std::stringstream();
+
+	std::string line;
+	while(!inputFile.eof())
 	{
-		//todo: throw 
-		return;
+		m_ostr << inputFile.tellg() << std::endl;
+		std::getline(inputFile, line);
+		*fileStream << line << std::endl;
 	}
 
-	std::streambuf* cinbuf = m_istr.rdbuf();
-	
-	m_istr.rdbuf(inputFile.rdbuf());
-	
-	while(!m_istr.eof())
-		runCalc();
+	inputFile.close();
 
-	m_istr.rdbuf(cinbuf);
+	m_input.pushStreamForInput(fileStream);
 }
 
 
