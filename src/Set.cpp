@@ -9,12 +9,23 @@ Set::Set(std::istream& istr)
 {
     auto n = 0;
     istr >> n;
-    for (auto i = 0; i < n; ++i)
+    //for (auto i = 0; i < n; ++i)
+
+    int num;
+    int i = 0;
+    while(istr >> num, !istr.fail())
     {
-        auto num = 0;
-        istr >> num;
+        ++i;
+    	
+        if (i > n)
+            throw; //too many
+
         m_items.push_back(num);
     }
+
+    if (i < n)
+        throw; //too few
+
     makeSet();
 }
 
