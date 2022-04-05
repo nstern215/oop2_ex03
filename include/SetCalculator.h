@@ -36,8 +36,7 @@ private:
 
     enum class Action
     {
-        Invalid,
-        Eval,
+    	Eval,
         Union,
         Intersection,
         Difference,

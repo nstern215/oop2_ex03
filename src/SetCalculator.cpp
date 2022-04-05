@@ -18,8 +18,9 @@
 namespace rng = std::ranges;
 
 SetCalculator::SetCalculator(std::istream& istr, std::ostream& ostr)
-	: m_actions(createActions()), m_operations(createOperations()), m_istr(istr), m_ostr(ostr)
-{}
+	: m_actions(createActions()), m_operations(createOperations()), m_istr(istr), m_ostr(ostr), m_input(m_istr)
+{
+}
 
 void SetCalculator::run()
 {
@@ -34,24 +35,26 @@ void SetCalculator::run()
 
 void SetCalculator::runCalc()
 {
-        do
-        {
-			SetCalculator::Action action;
+	m_input.loadInput();
+	SetCalculator::Action action;
 
-			try {
-				action = readAction();
-				runAction(action);
-			}
-			catch (BadCommand& e) {
-				e.show();
-			}
+	try {
+		action = readAction();
+		runAction(action);
+	}
+	catch (BadCommand& e) {
+		e.show();
 
-            m_ostr << '\n';
-            printOperations();
-            m_ostr << "Enter command ('help' for the list of available commands): ";
-
-        } while (m_running);
-   
+		action = Action::Help;
+		runAction(action);
+	}
+	catch (InvalidCommandNum& e)
+	{
+		e.show();
+		action = Action::Help;
+		runAction(action);
+	}
+	
 }
 
 void SetCalculator::eval()
@@ -62,13 +65,12 @@ void SetCalculator::eval()
 		auto inputs = std::vector<Set>();
 		for (auto i = 0; i < operation->inputCount(); ++i)
 		{
-			//throw num of sets is wrong
 
 			inputs.push_back(Set(m_istr));
 		}
 
-			operation->print(m_ostr, inputs);
-			m_ostr << " = " << operation->compute(inputs) << '\n';
+		operation->print(m_ostr, inputs);
+		m_ostr << " = " << operation->compute(inputs) << '\n';
 	}
 }
 
@@ -82,15 +84,15 @@ void SetCalculator::read()
 
 	if (!inputFile.is_open())
 	{
-		//todo: throw 
+		
 		return;
 	}
 
 	std::streambuf* cinbuf = m_istr.rdbuf();
-	
+
 	m_istr.rdbuf(inputFile.rdbuf());
-	
-	while(!m_istr.eof())
+
+	while (!m_istr.eof())
 		runCalc();
 
 	m_istr.rdbuf(cinbuf);
@@ -141,19 +143,16 @@ std::optional<int> SetCalculator::readOperationIndex() const
 	if (i >= m_operations.size())
 	{
 
-		// todo: make throw.
-
-		/*m_ostr << "Operation #" << i << " doesn't exist\n";
-		return {};*/
+		throw InvalidCommandNum();
 	}
 	return i;
 }
 
 SetCalculator::Action SetCalculator::readAction() const
 {
-    auto action = std::string();
+	auto action = std::string();
 
-    m_istr >> action;
+	m_istr >> action;
 
 	const auto i = std::ranges::find(m_actions, action, &ActionDetails::command);
 	if (i != m_actions.end())
@@ -172,16 +171,16 @@ void SetCalculator::runAction(Action action)
 		m_ostr << "Unknown enum entry used!\n";
 		break;
 
-        case Action::Eval:         eval();                     break;
-        case Action::Union:        binaryFunc<Union>();        break;
-        case Action::Intersection: binaryFunc<Intersection>(); break;
-        case Action::Difference:   binaryFunc<Difference>();   break;
-        case Action::Product:      binaryFunc<Product>();      break;
-        case Action::Comp:         binaryFunc<Comp>();         break;
-        case Action::Del:          del();                      break;
-        case Action::Help:         help();                     break;
-        case Action::Exit:         exit();                     break;
-    }
+	case Action::Eval:         eval();                     break;
+	case Action::Union:        binaryFunc<Union>();        break;
+	case Action::Intersection: binaryFunc<Intersection>(); break;
+	case Action::Difference:   binaryFunc<Difference>();   break;
+	case Action::Product:      binaryFunc<Product>();      break;
+	case Action::Comp:         binaryFunc<Comp>();         break;
+	case Action::Del:          del();                      break;
+	case Action::Help:         help();                     break;
+	case Action::Exit:         exit();                     break;
+	}
 }
 
 SetCalculator::ActionMap SetCalculator::createActions()

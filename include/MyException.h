@@ -10,7 +10,7 @@ class MyException {
 
 public: 
 
-	virtual void show() {cout << "problom detected" << " ";}
+	virtual void show() {cout << "PROBLEM DETECTED" << " ";}
 
 };
 
@@ -21,7 +21,19 @@ public:
 		
 		MyException::show();
 
-		cout << "bad input try again." << endl;
-		cout << "type help for instructions" << endl;
+		cout << "bad input try again." << endl << endl;
+
+	}
+};
+
+class InvalidCommandNum : public MyException {
+
+public:
+	virtual void show() override {
+
+		MyException::show();
+
+		cout << "command number does not exist." << endl << endl;
+		
 	}
 };
