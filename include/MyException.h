@@ -14,7 +14,7 @@ public:
 
 };
 
-class BadInput : public MyException {
+class BadCommand : public MyException {
 	
 public:
 	virtual void show() override {

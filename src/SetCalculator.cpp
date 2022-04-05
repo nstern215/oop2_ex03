@@ -19,8 +19,7 @@ namespace rng = std::ranges;
 
 SetCalculator::SetCalculator(std::istream& istr, std::ostream& ostr)
 	: m_actions(createActions()), m_operations(createOperations()), m_istr(istr), m_ostr(ostr)
-{
-}
+{}
 
 void SetCalculator::run()
 {
@@ -35,8 +34,6 @@ void SetCalculator::run()
 
 void SetCalculator::runCalc()
 {
-	//const auto action = readAction();
-	//runAction(action);
         do
         {
 			SetCalculator::Action action;
@@ -45,7 +42,7 @@ void SetCalculator::runCalc()
 				action = readAction();
 				runAction(action);
 			}
-			catch (BadInput& e) {
+			catch (BadCommand& e) {
 				e.show();
 			}
 
@@ -65,21 +62,13 @@ void SetCalculator::eval()
 		auto inputs = std::vector<Set>();
 		for (auto i = 0; i < operation->inputCount(); ++i)
 		{
+			//throw num of sets is wrong
+
 			inputs.push_back(Set(m_istr));
 		}
 
-		if (auto index = readOperationIndex(); index)
-		{
-			const auto& operation = m_operations[*index];
-			auto inputs = std::vector<Set>();
-			for (auto i = 0; i < operation->inputCount(); ++i)
-			{
-				inputs.push_back(Set(m_istr));
-			}
-
 			operation->print(m_ostr, inputs);
 			m_ostr << " = " << operation->compute(inputs) << '\n';
-		}
 	}
 }
 
@@ -151,8 +140,11 @@ std::optional<int> SetCalculator::readOperationIndex() const
 	m_istr >> i;
 	if (i >= m_operations.size())
 	{
-		m_ostr << "Operation #" << i << " doesn't exist\n";
-		return {};
+
+		// todo: make throw.
+
+		/*m_ostr << "Operation #" << i << " doesn't exist\n";
+		return {};*/
 	}
 	return i;
 }
@@ -169,9 +161,7 @@ SetCalculator::Action SetCalculator::readAction() const
 		return i->action;
 	}
 
-	throw BadInput();
-
-  // return Action::Invalid;
+	throw BadCommand();
 }
 
 void SetCalculator::runAction(Action action)
