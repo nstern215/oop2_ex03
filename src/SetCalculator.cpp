@@ -77,7 +77,6 @@ void SetCalculator::read()
 	std::string line;
 	while(!inputFile.eof())
 	{
-		m_ostr << inputFile.tellg() << std::endl;
 		std::getline(inputFile, line);
 		*fileStream << line << std::endl;
 	}

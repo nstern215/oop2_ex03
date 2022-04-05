@@ -15,20 +15,10 @@ std::string CalculatorInput::getLastInput() const
 
 void CalculatorInput::loadInput()
 {
-	while (!std::getline(m_streams.empty() ? m_istr : *m_streams.top(), m_lastInput))
-	{
-		if (m_streams.empty())
-			reset();
-		else
-		{
-			m_streams.pop();
-		}
-	}
+	while (!std::getline(*getInputBuf(), m_lastInput))
+		popStream();
 
-	m_lineInputStream.flush();
-	m_lineInputStream << m_lastInput;
-
-	m_istr.rdbuf(m_lineInputStream.rdbuf());
+	loadInputToStream();
 }
 
 void CalculatorInput::reset()
@@ -49,7 +39,51 @@ void CalculatorInput::pushStreamForInput(std::istream* stream)
 	m_userOriginMode = false;
 }
 
-bool CalculatorInput::isUserMode() const
+bool CalculatorInput::isUserMode()
 {
+	while (!m_streams.empty() && isInputBufferEmpty())
+		popStream();
+
+	m_userOriginMode = m_streams.empty();
+	
 	return m_userOriginMode;
+}
+
+std::istream* CalculatorInput::getInputBuf() const
+{
+	if (m_streams.empty())
+		return &m_istr;
+
+	return m_streams.top();
+}
+
+void CalculatorInput::popStream()
+{
+	if (m_streams.empty())
+		reset();
+	else
+		m_streams.pop();
+}
+
+void CalculatorInput::loadInputToStream()
+{
+	m_lineInputStream.flush();
+	m_lineInputStream << m_lastInput;
+
+	m_istr.rdbuf(m_lineInputStream.rdbuf());
+}
+
+bool CalculatorInput::isInputBufferEmpty()
+{
+	if (m_streams.empty())
+		return true;
+
+	char c;
+	*m_streams.top() >> c;
+
+	if (m_streams.top()->fail())
+		return true;
+
+	m_streams.top()->putback(c);
+	return false;
 }

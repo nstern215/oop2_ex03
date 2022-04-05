@@ -15,8 +15,13 @@ public:
 	void pushStreamForInput(std::istream* stream);
 	
 	std::string getLastInput() const;
-	bool isUserMode() const;
+	bool isUserMode();
 private:
+
+	std::istream* getInputBuf() const;
+	void popStream();
+	void loadInputToStream();
+	bool isInputBufferEmpty();
 	
 	std::stack<std::istream*> m_streams;
 	std::stringstream m_lineInputStream;
