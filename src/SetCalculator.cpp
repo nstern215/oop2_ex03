@@ -6,6 +6,7 @@
 #include "Product.h"
 #include "Comp.h"
 #include "Identity.h"
+#include "MyException.h"
 
 #include <istream>
 #include <ostream>
@@ -38,18 +39,19 @@ void SetCalculator::runCalc()
 	//runAction(action);
         do
         {
+			SetCalculator::Action action;
+
+			try {
+				action = readAction();
+				runAction(action);
+			}
+			catch (BadInput& e) {
+				e.show();
+			}
+
             m_ostr << '\n';
             printOperations();
             m_ostr << "Enter command ('help' for the list of available commands): ";
-
-            SetCalculator::Action action;
-
-            try {
-                action = readAction();            
-				runAction(action);
-			}catch(std::exception& e){
-                m_ostr << e.what() << std::endl;
-            }
 
         } while (m_running);
    
@@ -167,7 +169,7 @@ SetCalculator::Action SetCalculator::readAction() const
 		return i->action;
 	}
 
-	throw std::exception();
+	throw BadInput();
 
   // return Action::Invalid;
 }
