@@ -30,7 +30,10 @@ void SetCalculator::getListSize()
 	int i;
 	m_input.loadInput();
 
+	//todo: use m_istr instead
 	std::cin >> i;
+
+	//todo: set as const member (or define) in header file
 	if ((i < 3) || (i > 100))
 		throw std::out_of_range("The size is out of range. \n");
 
@@ -68,34 +71,33 @@ void SetCalculator::runCalc()
 		const auto action = readAction();
 		runAction(action);
 	}
-	catch(std::invalid_argument& e){
+	catch (std::invalid_argument& e)
+	{
+		m_ostr << e.what() << std::endl;
 
-		if(m_input.isUserMode())
+		if (!m_input.isUserMode())
 		{
-			m_ostr << e.what() << std::endl;
-		}
-		else
-		{
-			m_ostr << e.what() << std::endl;
 			m_ostr << m_input.getLastInput();
 
 			auto nextStep = 0;
 
 			m_ostr << "Please enter 1 to continue with file, or 0 to go back to userInput \n";
 
+			//todo: load input in user mode
 			m_istr >> nextStep;
 
-			if(nextStep != 1)
-			m_input.reset();
+			if (nextStep != 1)
+				m_input.reset();
 
 		}
 	}
 	catch (std::length_error& e) {
 
+		//todo: replace with "\n"
 		m_ostr << e.what() << std::endl;
 		m_input.reset();
 	}
-	catch(std::ios_base::failure& e)
+	catch (std::ios_base::failure& e)
 	{
 		m_ostr << e.what() << std::endl;
 	}
@@ -103,8 +105,9 @@ void SetCalculator::runCalc()
 	{
 		m_ostr << e.what() << std::endl;
 
-		if(m_operations.size() > 3)
-		m_operations.pop_back();
+		//todo: use const member instead of 3
+		if (m_operations.size() > 3)
+			m_operations.pop_back();
 	}
 
 }
@@ -117,10 +120,10 @@ void SetCalculator::eval()
 		auto inputs = std::vector<Set>();
 		for (auto i = 0; i < operation->inputCount(); ++i)
 		{
-				m_input.loadInput();
-				inputs.push_back(Set(m_istr));
-			
-			
+			m_input.loadInput();
+			inputs.push_back(Set(m_istr));
+
+
 		}
 
 		operation->print(m_ostr, inputs);
@@ -134,7 +137,7 @@ void SetCalculator::read()
 	m_istr >> path;
 
 	std::ifstream inputFile;
-	
+
 	inputFile.open(path);
 
 	if (!inputFile.is_open())
@@ -143,7 +146,7 @@ void SetCalculator::read()
 	const auto fileStream = new std::stringstream();
 
 	std::string line;
-	while(!inputFile.eof())
+	while (!inputFile.eof())
 	{
 		std::getline(inputFile, line);
 		*fileStream << line << std::endl;
@@ -172,7 +175,7 @@ void SetCalculator::resize()
 
 void SetCalculator::shortenList(int& size)
 {
-	for(int i = m_operations.size() ; m_operations.size() != size ; i--)
+	for (int i = m_operations.size(); m_operations.size() != size; i--)
 	{
 		m_operations.pop_back();
 	}
@@ -225,7 +228,7 @@ std::optional<int> SetCalculator::readOperationIndex() const
 	auto i = 0;
 	m_istr >> i;
 
-	if(m_istr.fail())
+	if (m_istr.fail())
 		throw std::invalid_argument("This argument is not valid");
 
 	if (i >= m_operations.size())
@@ -252,6 +255,7 @@ SetCalculator::Action SetCalculator::readAction() const
 
 void SetCalculator::runAction(Action action)
 {
+	//todo: check all functions for exception throwing\handling
 	switch (action)
 	{
 	default:
@@ -271,6 +275,7 @@ void SetCalculator::runAction(Action action)
 	case Action::Exit:         exit();                     break;
 	}
 
+	//todo: not belong here
 	if (m_operations.size() > m_listSize)
 		throw std::out_of_range("The list is currently full, there for cannot add the last operation.");
 }

@@ -28,6 +28,7 @@ private:
     template <typename FuncType>
     void binaryFunc()
     {
+    	//todo: check if there enough space to add a new operation
         if (auto f0 = readOperationIndex(), f1 = readOperationIndex(); f0 && f1)
         {
             m_operations.push_back(std::make_shared<FuncType>(m_operations[*f0], m_operations[*f1]));

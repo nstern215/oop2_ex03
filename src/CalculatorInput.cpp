@@ -15,9 +15,6 @@ std::string CalculatorInput::getLastInput() const
 
 void CalculatorInput::loadInput()
 {
-	m_lineInputStream.str("");
-
-
 	while (!std::getline(*getInputBuf(), m_lastInput))
 		popStream();
 
@@ -70,7 +67,7 @@ void CalculatorInput::popStream()
 
 void CalculatorInput::loadInputToStream()
 {
-	m_lineInputStream.flush();
+	m_lineInputStream.str(std::string());
 	m_lineInputStream << m_lastInput;
 
 	m_istr.rdbuf(m_lineInputStream.rdbuf());
