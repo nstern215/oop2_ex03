@@ -16,9 +16,11 @@ public:
     SetCalculator(std::istream& istr, std::ostream& ostr);
     void run();
 
+
 private:
     void eval();
     void read();
+    void resize();
     void del();
     void help();
     void exit();
@@ -45,6 +47,7 @@ private:
         Comp,
         Del,
     	Read,
+        Resize,
         Help,
         Exit,
     };
@@ -70,8 +73,16 @@ private:
     void runAction(Action action);
     void runCalc();
 
+    void getListSize();
+    void shortenList(int& size);
+	bool listIsFull();
+
+
     CalculatorInput m_input;
 	
     static ActionMap createActions();
     static OperationList createOperations();
+
+    bool m_sizeIsValid;
+    int m_listSize;
 };

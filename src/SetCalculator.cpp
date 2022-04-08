@@ -7,11 +7,14 @@
 #include "Comp.h"
 #include "Identity.h"
 
+#include <iostream>
 #include <istream>
 #include <ostream>
 #include <sstream>
 #include <algorithm>
 #include <fstream>
+#include <exception>
+
 
 namespace rng = std::ranges;
 
@@ -20,8 +23,30 @@ SetCalculator::SetCalculator(std::istream& istr, std::ostream& ostr)
 {
 }
 
+void SetCalculator::getListSize()
+{
+	m_ostr << "Please enter the size you would like for the list?" << std::endl;
+
+	int i;
+	m_input.loadInput();
+
+	std::cin >> i;
+	if ((i < 3) || (i > 100))
+		throw std::out_of_range("The size is out of range. \n");
+
+	if (i < m_operations.size())
+		shortenList(i);
+
+	m_listSize = i;
+
+}
+
+
 void SetCalculator::run()
 {
+
+	resize();
+
 	do
 	{
 		if (m_input.isUserMode())
@@ -37,9 +62,50 @@ void SetCalculator::run()
 void SetCalculator::runCalc()
 {
 	m_input.loadInput();
-	
-	const auto action = readAction();
-	runAction(action);
+
+	try
+	{
+		const auto action = readAction();
+		runAction(action);
+	}
+	catch(std::invalid_argument& e){
+
+		if(m_input.isUserMode())
+		{
+			m_ostr << e.what() << std::endl;
+		}
+		else
+		{
+			m_ostr << e.what() << std::endl;
+			m_ostr << m_input.getLastInput();
+
+			auto nextStep = 0;
+
+			m_ostr << "Please enter 1 to continue with file, or 0 to go back to userInput \n";
+
+			m_istr >> nextStep;
+
+			if(nextStep != 1)
+			m_input.reset();
+
+		}
+	}
+	catch (std::length_error& e) {
+
+		m_ostr << e.what() << std::endl;
+		m_input.reset();
+	}
+	catch(std::ios_base::failure& e)
+	{
+		m_ostr << e.what() << std::endl;
+	}
+	catch (std::out_of_range& e)
+	{
+		m_ostr << e.what() << std::endl;
+
+		if(m_operations.size() > 3)
+		m_operations.pop_back();
+	}
 
 }
 
@@ -51,8 +117,10 @@ void SetCalculator::eval()
 		auto inputs = std::vector<Set>();
 		for (auto i = 0; i < operation->inputCount(); ++i)
 		{
-			m_input.loadInput();
-			inputs.push_back(Set(m_istr));
+				m_input.loadInput();
+				inputs.push_back(Set(m_istr));
+			
+			
 		}
 
 		operation->print(m_ostr, inputs);
@@ -86,11 +154,39 @@ void SetCalculator::read()
 	m_input.pushStreamForInput(fileStream);
 }
 
+void SetCalculator::resize()
+{
+	m_sizeIsValid = false;
+
+	while (!m_sizeIsValid)
+		try
+	{
+		getListSize();
+		m_sizeIsValid = true;
+	}
+	catch (std::out_of_range& e)
+	{
+		m_ostr << e.what() << std::endl;
+	}
+}
+
+void SetCalculator::shortenList(int& size)
+{
+	for(int i = m_operations.size() ; m_operations.size() != size ; i--)
+	{
+		m_operations.pop_back();
+	}
+}
+
 
 void SetCalculator::del()
 {
+
 	if (auto i = readOperationIndex(); i)
 	{
+		if (m_operations.size() == 3)
+			throw std::out_of_range("The list is currently at the least it can be.");
+
 		m_operations.erase(m_operations.begin() + *i);
 	}
 }
@@ -128,11 +224,15 @@ std::optional<int> SetCalculator::readOperationIndex() const
 {
 	auto i = 0;
 	m_istr >> i;
+
+	if(m_istr.fail())
+		throw std::invalid_argument("This argument is not valid");
+
 	if (i >= m_operations.size())
 	{
-		m_ostr << "Operation #" << i << " doesn't exist\n";
-		return {};
+		throw std::invalid_argument("This functions number is not valid");
 	}
+
 	return i;
 }
 
@@ -147,7 +247,7 @@ SetCalculator::Action SetCalculator::readAction() const
 		return i->action;
 	}
 
-	return Action::Invalid;
+	throw std::invalid_argument("This command does not exist try again \n");
 }
 
 void SetCalculator::runAction(Action action)
@@ -158,10 +258,6 @@ void SetCalculator::runAction(Action action)
 		m_ostr << "Unknown enum entry used!\n";
 		break;
 
-	case Action::Invalid:
-		m_ostr << "Command not found\n";
-		break;
-
 	case Action::Eval:         eval();                     break;
 	case Action::Union:        binaryFunc<Union>();        break;
 	case Action::Intersection: binaryFunc<Intersection>(); break;
@@ -169,10 +265,14 @@ void SetCalculator::runAction(Action action)
 	case Action::Product:      binaryFunc<Product>();      break;
 	case Action::Comp:         binaryFunc<Comp>();         break;
 	case Action::Read:         read();                     break;
+	case Action::Resize:       resize();                   break;
 	case Action::Del:          del();                      break;
 	case Action::Help:         help();                     break;
 	case Action::Exit:         exit();                     break;
 	}
+
+	if (m_operations.size() > m_listSize)
+		throw std::out_of_range("The list is currently full, there for cannot add the last operation.");
 }
 
 SetCalculator::ActionMap SetCalculator::createActions()
@@ -227,6 +327,11 @@ SetCalculator::ActionMap SetCalculator::createActions()
 			Action::Read
 		},
 		{
+			"resize",
+			" list - shorten list or make list longer",
+			Action::Resize
+		},
+		{
 			"help",
 			" - print this command list",
 			Action::Help
@@ -247,4 +352,12 @@ SetCalculator::OperationList SetCalculator::createOperations()
 		std::make_shared<Intersection>(std::make_shared<Identity>(), std::make_shared<Identity>()),
 		std::make_shared<Difference>(std::make_shared<Identity>(), std::make_shared<Identity>())
 	};
+}
+
+bool SetCalculator::listIsFull()
+{
+	if (m_operations.size() == (m_listSize - 1))
+		return true;
+
+	return false;
 }

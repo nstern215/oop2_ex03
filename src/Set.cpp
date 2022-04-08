@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <exception>
 
 namespace rng = std::ranges;
 
@@ -18,13 +19,13 @@ Set::Set(std::istream& istr)
         ++i;
     	
         if (i > n)
-            throw; //too many
+            throw std::length_error("Too many items were read for this set");
 
         m_items.push_back(num);
     }
 
     if (i < n)
-        throw; //too few
+        throw std::length_error("Too few items were read for this set");
 
     makeSet();
 }
